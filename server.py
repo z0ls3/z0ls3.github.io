@@ -17,9 +17,9 @@ def save_data():
     print(data['mbti'])
     print(data['sum'])
     # 连接MySQL数据库
-    connection = pymysql.connect(host='localhost',
-                        user='root',
-                        password='Admin@233',
+    connection = pymysql.connect(host='',
+                        user='',
+                        password='',
                         db='mbti',
                         charset='utf8mb4',
                         cursorclass=pymysql.cursors.DictCursor)
