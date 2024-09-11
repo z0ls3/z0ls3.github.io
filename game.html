@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <title>1024</title>
+    <meta name="description" content="" />
+    <meta name="keywords" content="" />
+    <link href="style.css" rel="stylesheet" />
+    <script src="http://libs.baidu.com/jquery/1.9.0/jquery.min.js"></script>
+    <script src="support1024.js"></script>
+	<style>
+		        /* Direction Buttons */
+		.direction-btns {
+			position: absolute;
+			bottom: 20px;
+			left: 50%;
+			transform: translateX(-50%);
+			text-align: center;
+        }
+        .direction-btn {
+            width: 50px;
+            height: 50px;
+            border: none;
+            background-color: #4CAF50; /* 可自定义背景颜色 */
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            margin: 10px;
+        }
+    </style>
+	</style>
+  </head>
+  <body>
+    <div id="header">
+      <h2>1024</h2>
+      <a id="newgamebutton" href="javascript:newgame();">new game</a>
+    </div>
+	<p>在开始游戏前，然后选择你的MBTI</p>
+	<select id="mbtiOptions" onchange="selectOption(this)">
+		<option value="ISTJ">ISTJ - 理智稳重型</option>
+		<option value="ISFJ">ISFJ - 实践关怀型</option>
+		<option value="INFJ">INFJ - 洞察导向型</option>
+		<option value="INTJ">INTJ - 构想战略型</option>
+		<option value="ISTP">ISTP - 机敏探索型</option>
+		<option value="ISFP">ISFP - 随和创造型</option>
+		<option value="INFP">INFP - 原则理想型</option>
+		<option value="INTP">INTP - 理论逻辑型</option>
+		<option value="ESTP">ESTP - 实干行动型</option>
+		<option value="ESFP">ESFP - 表演享受型</option>
+		<option value="ENFP">ENFP - 开创激励型</option>
+		<option value="ENTP">ENTP - 创新挑战型</option>
+		<option value="ESTJ">ESTJ - 组织执行型</option>
+		<option value="ESFJ">ESFJ - 关怀服务型</option>
+		<option value="ENFJ">ENFJ - 领导教导型</option>
+		<option value="ENTJ">ENTJ - 目标决策型</option>
+	  </select>
+    <div id="grid-container">
+      <div id="grid-container-0-0" class="grid-cell"></div>
+      <div id="grid-container-0-1" class="grid-cell"></div>
+      <div id="grid-container-0-2" class="grid-cell"></div>
+      <div id="grid-container-0-3" class="grid-cell"></div>
+      <div id="grid-container-1-0" class="grid-cell"></div>
+      <div id="grid-container-1-1" class="grid-cell"></div>
+      <div id="grid-container-1-2" class="grid-cell"></div>
+      <div id="grid-container-1-3" class="grid-cell"></div>
+      <div id="grid-container-2-0" class="grid-cell"></div>
+      <div id="grid-container-2-1" class="grid-cell"></div>
+      <div id="grid-container-2-2" class="grid-cell"></div>
+      <div id="grid-container-2-3" class="grid-cell"></div>
+      <div id="grid-container-3-0" class="grid-cell"></div>
+      <div id="grid-container-3-1" class="grid-cell"></div>
+      <div id="grid-container-3-2" class="grid-cell"></div>
+      <div id="grid-container-3-3" class="grid-cell"></div>
+    </div>
+
+<!-- Direction Buttons -->
+<div class="direction-btns">
+	<button id="up-btn" class="direction-btn">&#8593;</button> <!-- 上 -->
+	<button id="down-btn" class="direction-btn">&#8595;</button> <!-- 下 -->
+	<button id="left-btn" class="direction-btn">&#8592;</button> <!-- 左 -->
+	<button id="right-btn" class="direction-btn">&#8594;</button> <!-- 右 -->
+</div>
+
+    <script type="text/javascript">
+      var board = new Array();
+      var score = 0;
+	  var sum = 0;
+      $(document).ready(function () {
+        newgame();
+      });
+	  function mysum(){
+		// 使用双重循环求和
+		for(let i = 0; i < board.length; i++) {
+		for(let j = 0; j < board[i].length; j++) {
+			sum += board[i][j];
+		}
+	  }
+	}
+
+      function newgame() {
+        for (var i = 0; i < 4; i++) {
+          for (var j = 0; j < 4; j++) {
+            $("#grid-container-" + i + "-" + j).css("top", getPosTop(i, j));
+            $("#grid-container-" + i + "-" + j).css("left", getPosLeft(i, j));
+          }
+        }
+
+        // 初始化二维数组
+        for (var i = 0; i < 4; i++) {
+          board[i] = new Array();
+          for (var j = 0; j < 4; j++) {
+            board[i][j] = 0;
+          }
+        }
+        // 动态添加放置数字的格子
+        updateBoardView();
+        // 随机添加两个数字
+        //在随机两个格子生成数字2或者是4，位置也是随机的
+        generateOneNumber();
+        generateOneNumber();
+      }
+
+      function updateBoardView() {
+        // 先移除一下，防止第二次点击的时候添加而第一次点击添加的内容还在。
+        $(".number-cell").remove();
+        for (var i = 0; i < 4; i++) {
+          for (var j = 0; j < 4; j++) {
+            $("#grid-container").append(
+              "<div class='number-cell' id='number-cell-" +
+                i +
+                "-" +
+                j +
+                "'></div>"
+            );
+            // 初始化装数字的格子。相当于16个格子上每个都对应有一个数字，大小一样，开始的时候设置宽高都为0;当有数字的时候宽高就为100;
+            var theNumberCell = $("#number-cell-" + i + "-" + j);
+            if (board[i][j] == 0) {
+              theNumberCell.css("width", "0px");
+              theNumberCell.css("height", "0px");
+              theNumberCell.css("top", getPosTop(i, j) + 50);
+              theNumberCell.css("left", getPosLeft(i, j) + 50);
+            } else {
+              theNumberCell.css("width", "100px");
+              theNumberCell.css("height", "100px");
+              theNumberCell.css("background", getBgColor(board[i][j]));
+              theNumberCell.css("color", getNumClolr(board[i][j]));
+              theNumberCell.css("top", getPosTop(i, j));
+              theNumberCell.css("left", getPosLeft(i, j));
+              theNumberCell.text(board[i][j]);
+            }
+          }
+        }
+      }
+
+      $(document).keydown(function (event) {
+        switch (event.keyCode) {
+          case 37: //left
+            // 向左移动 判断能不能向左
+            if (moveLeft()) {
+              // 如果能向左移动，则向左移，然后随机生成一个数字2或者4
+              setTimeout("generateOneNumber()", 200);
+              // 并且判断游戏是否结束
+              setTimeout("isGameOver()", 300);
+            }
+            break;
+          case 38: //up
+            if (moveUp()) {
+              setTimeout("generateOneNumber()", 200);
+              setTimeout("isGameOver()", 300);
+            }
+            break;
+          case 39: //right
+            if (moveRight()) {
+              // 如果能向左移动，则向左移，然后随机生成一个数字2或者4
+              setTimeout("generateOneNumber()", 200);
+              // 并且判断游戏是否结束
+              setTimeout("isGameOver()", 300);
+            }
+            break;
+          case 40: //down
+            if (moveDown()) {
+              setTimeout("generateOneNumber()", 200);
+              setTimeout("isGameOver()", 300);
+            }
+            break;
+          default:
+            break;
+        }
+      });
+
+      function moveLeft() {
+        if (!canMoveLeft(board)) {
+          return false;
+        } else {
+          // 向左移动
+          // 判断能不能向左移动，判断依据：
+          // 1 移动到的位置是不是为空
+          // 2 移动的数字和左边的数字是不是相等
+          // 3 移动的数字到移动到的位置中间的路径是不是为空
+          for (var i = 0; i < 4; i++) {
+            for (var j = 1; j < 4; j++) {
+              if (board[i][j] != 0) {
+                // 不为0 则可能向左移动
+                for (var k = 0; k < j; k++) {
+                  //第i行的所有元素，从第一列到第j列循环
+                  // 判断第i行的第K列为空 并且第k列的左边没有遮挡的元素(障碍物)
+                  if (board[i][k] == 0 && noBlockCol(i, k, j, board)) {
+                    // move
+                    showAnimate(i, j, i, k);
+                    board[i][k] = board[i][j];
+                    board[i][j] = 0;
+                    continue;
+                    //
+                  } else if (
+                    board[i][k] == board[i][j] &&
+                    noBlockCol(i, k, j, board)
+                  ) {
+                    // move
+                    showAnimate(i, j, i, k);
+                    // add
+                    board[i][k] += board[i][j];
+                    board[i][j] = 0;
+                    continue;
+                  }
+                }
+              }
+            }
+          }
+          setTimeout("updateBoardView()", 150);
+          return true;
+        }
+      }
+
+      function moveRight() {
+        if (!canMoveRight(board)) {
+          return false;
+        } else {
+          for (var i = 0; i < 4; i++) {
+            for (var j = 2; j >= 0; j--) {
+              if (board[i][j] != 0) {
+                // 不为0 则可能向左移动
+                for (var k = 3; k > j; k--) {
+                  //第i行的所有元素，从第一列到第j列循环
+                  // 判断第i行的第K列为空 并且第k列的左边没有遮挡的元素(障碍物)
+                  if (board[i][k] == 0 && noBlockCol(i, j, k, board)) {
+                    // move
+                    showAnimate(i, j, i, k);
+                    board[i][k] = board[i][j];
+                    board[i][j] = 0;
+                    continue;
+                    //
+                  } else if (
+                    board[i][k] == board[i][j] &&
+                    noBlockCol(i, j, k, board)
+                  ) {
+                    // move
+                    showAnimate(i, j, i, k);
+                    // add
+                    board[i][k] += board[i][j];
+                    board[i][j] = 0;
+                    continue;
+                  }
+                }
+              }
+            }
+          }
+          setTimeout("updateBoardView()", 150);
+          return true;
+        }
+      }
+
+      function moveUp() {
+        if (!canMoveUp(board)) {
+          return false;
+        } else {
+          for (var j = 0; j < 4; j++) {
+            for (var i = 1; i < 4; i++) {
+              if (board[i][j] != 0) {
+                for (var k = 0; k < i; k++) {
+                  if (board[k][j] == 0 && noBlockRow(k, i, j, board)) {
+                    showAnimate(i, j, k, j);
+                    board[k][j] = board[i][j];
+                    board[i][j] = 0;
+                    continue;
+                  } else if (
+                    board[k][j] == board[i][j] &&
+                    noBlockRow(k, i, j, board)
+                  ) {
+                    showAnimate(i, j, k, j);
+                    board[k][j] *= 2;
+                    board[i][j] = 0;
+                    continue;
+                  }
+                }
+              }
+            }
+          }
+          setTimeout("updateBoardView()", 150);
+          return true;
+        }
+      }
+
+      function moveDown() {
+        if (!canMoveDown(board)) {
+          return false;
+        } else {
+          for (var j = 0; j < 4; j++) {
+            for (var i = 2; i >= 0; i--) {
+              if (board[i][j] != 0) {
+                for (var k = 3; k > i; k--) {
+                  if (board[k][j] == 0 && noBlockRow(i, k, j, board)) {
+                    showAnimate(i, j, k, j);
+                    board[k][j] = board[i][j];
+                    board[i][j] = 0;
+                    continue;
+                  } else if (
+                    board[k][j] == board[i][j] &&
+                    noBlockRow(i, k, j, board)
+                  ) {
+                    showAnimate(i, j, k, j);
+                    board[k][j] *= 2;
+                    board[i][j] = 0;
+                    continue;
+                  }
+                }
+              }
+            }
+          }
+          setTimeout("updateBoardView()", 150);
+          return true;
+        }
+      }
+
+      // 判断能不能向左移动，判断的依据是：
+      // 1 他的左边没有数字，
+      // 2 他的左边有数字但是和他相等
+      function canMoveLeft(board) {
+        for (var i = 0; i < 4; i++) {
+          // 注意：这里的j(列)是从1开始的，因为第一列就在最左边，是不能向左移动的。
+          for (var j = 1; j < 4; j++) {
+            if (board[i][j] != 0) {
+              // 判断 当前board[i][j] 的元素的左边一个是不是为0或者是不是相等
+              if (board[i][j - 1] == 0 || board[i][j - 1] == board[i][j]) {
+                return true;
+              }
+            }
+          }
+        }
+        return false;
+      }
+
+      function canMoveRight(board) {
+        for (var i = 0; i < 4; i++) {
+          // 注意：这里的j(列)是从1开始的，因为第一列就在最左边，是不能向左移动的。
+          for (var j = 2; j >= 0; j--) {
+            if (board[i][j] != 0) {
+              // 判断 当前board[i][j] 的元素的左边一个是不是为0或者是不是相等
+              if (board[i][j + 1] == 0 || board[i][j] == board[i][j + 1]) {
+                return true;
+              }
+            }
+          }
+        }
+        return false;
+      }
+
+      function canMoveUp(board) {
+        for (var j = 0; j < 4; j++) {
+          for (var i = 1; i < 4; i++) {
+            if (board[i][j] != 0) {
+              if (board[i - 1][j] == 0 || board[i - 1][j] == board[i][j]) {
+                return true;
+              }
+            }
+          }
+        }
+        return false;
+      }
+
+      function canMoveDown(board) {
+        for (var j = 0; j < 4; j++) {
+          for (var i = 2; i >= 0; i--) {
+            if (board[i][j] != 0) {
+              if (board[i + 1][j] == 0 || board[i + 1][j] == board[i][j]) {
+                return true;
+              }
+            }
+          }
+        }
+        return false;
+      }
+
+      function isGameOver() {
+        if (noMove() && nospace(board)) {
+			// 获取当前时间戳
+			var currentTime = new Date().getTime();
+			// 计算从页面加载到调用isGameOver函数所用的时间（单位：毫秒）
+			var elapsedTime = currentTime - window.startTime;
+			// 将毫秒转换为秒（如果需要）
+			var elapsedTimeInSeconds = elapsedTime / 1000;
+			console.log('时间:'+elapsedTimeInSeconds);
+			console.log('mbti:'+selectedValue);
+			mysum();
+			console.log("sum="+sum);
+
+      fetch('http://www.imod.top:8000/api/save-data', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    elapsedTimeInSeconds: elapsedTimeInSeconds,
+    mbti: selectedValue,
+    sum:sum
+  })
+})
+			alert("Game Over");
+        }
+      }
+
+      // 判断能不能移动
+      function noMove() {
+        if (
+          canMoveDown(board) ||
+          canMoveUp(board) ||
+          canMoveRight(board) ||
+          canMoveLeft(board)
+        ) {
+          return false;
+        } else {
+          return true;
+        }
+      }
+	//   手机端按钮
+	function upFunction() {
+            // console.log('You clicked on the Up button.');
+			moveUp();
+			setTimeout("generateOneNumber()", 200);
+              setTimeout("isGameOver()", 300);
+        }
+
+        function downFunction() {
+            // console.log('You clicked on the Down button.');
+			moveDown();
+			setTimeout("generateOneNumber()", 200);
+			setTimeout("isGameOver()", 300);
+        }
+
+        function leftFunction() {
+            // console.log('You clicked on the Left button.');
+			moveLeft();
+			setTimeout("generateOneNumber()", 200);
+              setTimeout("isGameOver()", 300);
+        }
+
+        function rightFunction() {
+            // console.log('You clicked on the Right button.');
+			moveRight();
+			setTimeout("generateOneNumber()", 200);
+              setTimeout("isGameOver()", 300);
+        }
+
+        document.getElementById('up-btn').addEventListener('click', upFunction);
+        document.getElementById('down-btn').addEventListener('click', downFunction);
+        document.getElementById('left-btn').addEventListener('click', leftFunction);
+        document.getElementById('right-btn').addEventListener('click', rightFunction);
+		var selectedValue = 'ISTJ'
+		function selectOption(sel) {
+		selectedValue = sel.options[sel.selectedIndex].value;
+		console.log("Selected MBTI type: ", selectedValue);
+		}
+		window.onload = function() {
+    		window.startTime = new Date().getTime();
+		};
+    </script>
+  </body>
+</html>
